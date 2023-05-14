@@ -1,0 +1,30 @@
+
+@media (max-width: 768px) {
+    #navbar-items {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 60px;
+        left: 0;
+        right: 0;
+        background-color: #333;
+        padding: 20px;
+      }
+    
+      #navbar-items a {
+        margin-right: 0;
+        margin-bottom: 10px;
+      }
+    
+      .navbar-toggle {
+        display: block;
+      }
+    
+      .navbar-toggle.active {
+        color: #fff;
+      }
+    
+      .navbar-toggle.active:before {
+        content: "\2715";
+      }
+}

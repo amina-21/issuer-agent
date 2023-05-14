@@ -1,0 +1,9 @@
+// send connection request endpoint
+
+app.post('/send_connection_request', auth.isLoggedIn, async function (req, res) {
+  let theirEndpointDid = req.body.did;
+  let connectionRequest = await indy.connections.prepareRequest(theirEndpointDid);
+
+  await indy.crypto.sendAnonCryptedMessage(theirEndpointDid, connectionRequest);
+  res.redirect('/#relationships');
+});
