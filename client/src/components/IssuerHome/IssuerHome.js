@@ -3,15 +3,17 @@ import { Link } from "react-router-dom";
 import "../boosted/css/boosted.min.css";
 
 function IssuerHome() {
+  // window.location.reload();
   return (
     <div>
-      <h1>Welcome To Soverify Solution</h1>
+      <h1>Welcome {} To Soverify Solution</h1>
       <div className="card-container">
         <div className="card" style={{ width: "18rem" }}>
           <div className="card-body">
             <h5 className="card-title">Send Invitations</h5>
             <p className="card-text fw-bold mb-4" style={{ height: "90px" }}>
-              Here you can create an invitation to start a communication with the franchise branch you will legitimize.
+              Here you can create an invitation to start a communication with
+              the franchise branch you will legitimize.
             </p>
             <Link to="/create-invitation" className="btn btn-primary">
               Create Invitation

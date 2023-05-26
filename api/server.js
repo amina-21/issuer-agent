@@ -4,17 +4,12 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
-
-// added on 11/05/2023 in an attempt to simulate and make analogy referring to spencer's tuto of alice faber acme example
-// this code calls out authentication module to verify whether the user is authenticated or not and if they are it allows them to send an invitation request
-// ####################################
-const app = express.Router();
-const indy = require("../indy-e/index");
-const auth = require("../client/src/components/authentication");
-// ##########################################
+const axios = require("axios");
+const session = require("express-session");
+const crypto = require("crypto");
 
 // create an express application
-//onst app = express();
+const app = express();
 // Add this line to handle JSON-encoded request bodies
 app.use(bodyParser.json());
 
@@ -34,7 +29,210 @@ mongoose
   .then(() => console.log("connected to DB"))
   .catch(console.error);
 
+// Generate a random secret key for the server
+const secretKey = crypto.randomBytes(32).toString("hex");
+
+console.log(secretKey);
+
+app.use(
+  session({
+    secret: secretKey,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
 const User = require("./models/User");
+const Branch = require("./models/Branch");
+
+// Create a schema and model for storing the data in MongoDB
+const InvitationSchema = new mongoose.Schema({
+  // Define the structure of the data you want to store
+  // Adjust this based on the structure of the response data from the API
+  connection_id: String,
+  // invitation: String,
+  invitation: mongoose.Schema.Types.Mixed,
+  invitation_url: String,
+  did: String,
+  status: String,
+});
+
+const InvitationModel = mongoose.model("Invitation", InvitationSchema);
+
+// create invitation
+// app.post("/create-invitation", (req, res) => {
+//   // Create a new instance of the Data model using the received data
+//   const newInvitation = new InvitationModel({
+//     // Assign the received data to the corresponding properties in the schema
+//     // Adjust this based on the properties of the response data
+//     connection_id: req.body.connection_id,
+//     invitation: req.body.invitation,
+//     invitation_url: req.body.invitation_url,
+
+//   });
+
+//   // Save the new data to MongoDB
+//   newInvitation
+//     .save()
+//     .then(() => {
+//       console.log("Data saved to MongoDB");
+//       res.status(200).json({ message: "Data stored successfully" });
+//     })
+//     .catch((error) => {
+//       console.error("Failed to save data to MongoDB:", error);
+//       res.status(500).json({ error: "Failed to store data" });
+//     });
+// });
+
+// Create invitation endpoint
+app.post("/create-invitation", createInvitationApiCall);
+
+// CreateInvitationApiCall function
+async function createInvitationApiCall(req, res) {
+  try {
+    const apiUrl = "http://localhost:8021/connections/create-invitation";
+    const did = req.body.did;
+    const status = req.body.status;
+    console.log("did:", did);
+
+    // Data to send in the request body
+    const postData = {};
+    // Make the POST API call using axios
+    const response = await axios.post(apiUrl, postData);
+    // Handle the API response
+
+    console.log("API response:", response.data);
+    // Create a new instance of the Data model using the received data
+    const newInvitation = new InvitationModel({
+      // Assign the received data to the corresponding properties in the schema
+      // Adjust this based on the properties of the response data
+      connection_id: response.data.connection_id,
+      invitation: response.data.invitation,
+      invitation_url: response.data.invitation_url,
+      did: did,
+      status: status,
+    });
+
+    // Save the new data to MongoDB
+    newInvitation
+      .save()
+      .then(() => {
+        console.log("Data saved to MongoDB");
+        res.json({ message: "Data stored successfully" });
+      })
+      .catch((error) => {
+        console.error("Error saving data to MongoDB:", error);
+        res.status(500).json({ error: "Failed to store data" });
+      });
+  } catch (error) {
+    console.error("Error making POST API call:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+// Route to fetch all invitations sent by the issuer
+app.get("/view-invitations", (req, res) => {
+  // Fetch all invitations from the database
+  InvitationModel.find({})
+    .exec()
+    .then((invitations) => {
+      res.json(invitations);
+    })
+    .catch((err) => {
+      console.error("Failed to fetch invitations from MongoDB:", err);
+      res.status(500).json({ error: "Failed to fetch invitations" });
+    });
+});
+
+// View invitation Holder endpoint
+app.post("/view-invitation-holder", (req, res) => {
+  const { did } = req.body;
+
+  // Fetch invitations dedicated to itd DID from the database
+  InvitationModel.find({ did })
+    .exec()
+    .then((invitations) => {
+      res.json(invitations);
+    })
+    .catch((err) => {
+      console.error("Failed to fetch invitations from MongoDB:", err);
+      res.status(500).json({ error: "Failed to fetch invitations" });
+    });
+});
+
+// Accept Invitation Holder
+app.post("/accept-invitation", (req, res) => {
+  const { connId } = req.body;
+
+  // Update the status of the invitation in MongoDB
+  InvitationModel.findOneAndUpdate(
+    { connection_id: connId },
+    { $set: { status: "accepted" } },
+    { new: true }
+  )
+    .then((updatedInvitation) => {
+      // Handle the updated invitation
+      res.json(updatedInvitation);
+    })
+    .catch((error) => {
+      console.error("Failed to accept invitation:", error);
+      res.status(500).json({ error: "Failed to accept invitation" });
+    });
+});
+
+//Issue credential offer
+app.post("/issue-credential", (req, res) => {
+  const { didHolder } = req.body;
+  Branch.findOneAndUpdate(
+    { holderDID: didHolder }, // Filter for the document to update
+    { $set: { legitimizedFromIssuer: "yes" } }, // Update the field
+    { new: true } // Return the updated document
+  )
+    .then((updatedBranch) => {
+      // Handle the updated branch
+      res.json(updatedBranch);
+    })
+    .catch((error) => {
+      // Handle the error
+      console.error("Failed to update branch:", error);
+      res.status(500).json({ error: "Failed to update branch" });
+    });
+});
+
+//View credential offer from holder
+app.post("/view-credential-offer", (req, res) => {
+  const { didHolder } = req.body;
+
+  // Fetch credential offer from branch collection
+  Branch.find({ holderDID: didHolder, legitimizedFromIssuer: "yes" })
+    .exec()
+    .then((credentials) => {
+      res.json(credentials);
+    })
+    .catch((err) => {
+      console.error("Failed to fetch credentials from MongoDB:", err);
+      res.status(500).json({ error: "Failed to fetch credentials" });
+    });
+});
+
+// Accept credential offer
+app.post("/accept-credential-offer", (req, res) => {
+  const { did } = req.body;
+  Branch.findOneAndUpdate(
+    { holderDID: did }, // Filter for the document to update
+    { $set: { acceptedFromHolder: "yes" } }, // Update the field
+    { new: true } // Return the updated document
+  )
+    .then((updatedBranch) => {
+      // Handle the updated branch
+      res.json(updatedBranch);
+    })
+    .catch((error) => {
+      // Handle the error
+      console.error("Failed to update branch:", error);
+      res.status(500).json({ error: "Failed to update branch" });
+    });
+});
 
 //routes register & login
 
@@ -67,7 +265,7 @@ app.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    // Find user in database by username
+    // Find user in the database by username
     const user = await User.findOne({ username });
 
     // If user is not found, return error
@@ -75,7 +273,7 @@ app.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid username or password" });
     }
 
-    // Compare password with hashed password in database
+    // Compare password with hashed password in the database
     const passwordMatch = await bcrypt.compare(password, user.password);
 
     // If passwords do not match, return error
@@ -83,162 +281,37 @@ app.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid username or password" });
     }
 
-    // Generate JWT token with user ID and user role
-    const token = jwt.sign(
-      { id: user._id, role: user.userRole },
-      "your_secret_key_here"
-    );
+    // Store the username and user role in the session
+    req.session.username = user.username;
+    req.session.userRole = user.userRole;
+    req.session.did = user.DID;
 
-    // Send token and user role in response
-    res.json({ token, role: user.userRole });
+    // Send success response with user role and did
+    res.json({
+      success: true,
+      username: user.username,
+      userRole: user.userRole,
+      did: user.DID,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Internal server error" });
   }
 });
-//#############################
-// start of attempt of the 11/05/2023 to simulate the spencer demo alice faber acme
-// so in case it wrecked the code just delete it and go back into running aca-py locally
-// it did not take time for e super to refuse this and tell me to focus on ONE THING AT A TIIIIIME
-//##################################
 
-// send connection request endpoint
-app.post(
-  "/send_connection_request",
-  auth.isLoggedIn,
-  async function (req, res) {
-    let theirEndpointDid = req.body.did;
-    let connectionRequest = await indy.connections.prepareRequest(
-      theirEndpointDid
-    );
-
-    await indy.crypto.sendAnonCryptedMessage(
-      theirEndpointDid,
-      connectionRequest
-    );
-    res.redirect("/#relationships");
-  }
-);
-
-// create schema endpoint
-app.post("/issuer/create_schema", auth.isLoggedIn, async function (req, res) {
-  await indy.issuer.createSchema(
-    req.body.name_of_schema,
-    req.body.version,
-    req.body.attributes
-  );
-  res.redirect("/#issuing");
-});
-
-// create credential definition schema
-app.post("/issuer/create_cred_def", auth.isLoggedIn, async function (req, res) {
-  await indy.issuer.createCredDef(req.body.schema_id, req.body.tag);
-  res.redirect("/#issuing");
-});
-
-// send credential offer endpoint
-app.post(
-  "/issuer/send_credential_offer",
-  auth.isLoggedIn,
-  async function (req, res) {
-    await indy.credentials.sendOffer(
-      req.body.their_relationship_did,
-      req.body.cred_def_id
-    );
-    res.redirect("/#issuing");
-  }
-);
-
-// accept offer endpoint
-app.post(
-  "/credentials/accept_offer",
-  auth.isLoggedIn,
-  async function (req, res) {
-    let message = indy.store.messages.getMessage(req.body.messageId);
-    indy.store.messages.deleteMessage(req.body.messageId);
-    await indy.credentials.sendRequest(
-      message.message.origin,
-      message.message.message
-    );
-    res.redirect("/#messages");
-  }
-);
-
-// reject offer endpoint
-app.post(
-  "/credentials/reject_offer",
-  auth.isLoggedIn,
-  async function (req, res) {
-    indy.store.messages.deleteMessage(req.body.messageId);
-    res.redirect("/");
-  }
-);
-
-//request connection endpoint
-app.put("/connections/request", auth.isLoggedIn, async function (req, res) {
-  let name = req.body.name;
-  let messageId = req.body.messageId;
-  let message = indy.store.messages.getMessage(messageId);
-  indy.store.messages.deleteMessage(messageId);
-  await indy.connections.acceptRequest(
-    name,
-    message.message.message.endpointDid,
-    message.message.message.did,
-    message.message.message.nonce
-  );
-  res.redirect("/#relationships");
-});
-
-//delete connection request endpoint
-app.delete("/connections/request", auth.isLoggedIn, async function (req, res) {
-  // FIXME: Are we actually passing in the messageId yet?
-  if (req.body.messageId) {
-    indy.store.messages.deleteMessage(req.body.messageId);
-  }
-  res.redirect("/#relationships");
-});
-
-//delete message request endpoint
-app.post("/messages/delete", auth.isLoggedIn, function (req, res) {
-  indy.store.messages.deleteMessage(req.body.messageId);
-  res.redirect("/#messages");
-});
-
-// accept proof endpoint
-app.post("/proofs/accept", auth.isLoggedIn, async function (req, res) {
-  await indy.proofs.acceptRequest(req.body.messageId);
-  res.redirect("/#messages");
-});
-
-// send request endpoint
-app.post("/proofs/send_request", auth.isLoggedIn, async function (req, res) {
-  let myDid = await indy.pairwise.getMyDid(req.body.their_relationship_did);
-  await indy.proofs.sendRequest(
-    myDid,
-    req.body.their_relationship_did,
-    req.body.proof_request_id,
-    req.body.manual_entry
-  );
-  res.redirect("/#proofs");
-});
-
-// validate proof endpoint
-app.post("/proofs/validate", auth.isLoggedIn, async function (req, res) {
-  try {
-    let proof = req.body;
-    if (await indy.proofs.validate(proof)) {
-      res.status(200).send();
+// //logout
+app.post("/logout", (req, res) => {
+  // Clear the session
+  req.session.destroy((err) => {
+    if (err) {
+      console.error(err);
+      res.status(500).json({ message: "Internal server error" });
     } else {
-      res.status(400).send();
+      res.sendStatus(200);
     }
-  } catch (err) {
-    res.status(500).send();
-  }
+  });
 });
 
-//#############################
-// the frontend actions are comming from an index file that has form action  C:\Users\a.kchaou1\Desktop\PFE\tuto\MERN-app-agents\ui-e\views\index.html
-// end of attempt of the 11/05/2023 to simulate the spencer demo alice faber acme
-//##################################
-
-app.listen(3007, () => console.log("server running on 3007"));
+app.listen(3007, () => {
+  console.log("connected to 3007");
+});

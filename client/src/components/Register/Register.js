@@ -36,7 +36,7 @@ function Register() {
       .then((res) => {
         console.log(res.data, "userRegister");
         if (res.data.status === "ok") {
-          alert("Registration Successful");
+          //alert("Registration Successful");
           setUserRoleDefault("Open this to select your role"); // reset the select field value to default
           navigate("/login");
         } else {

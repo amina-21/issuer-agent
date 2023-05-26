@@ -3,8 +3,8 @@ import logo from "./orange-logo.png";
 import "./NavBar.css";
 import "../boosted/css/boosted.min.css";
 import "../boosted/js/boosted.bundle.min.js";
-import { useLocation } from 'react-router-dom';
-
+import { useLocation } from "react-router-dom";
+//import NavBarIssuer from "./NavBarIssuer";
 
 export default function NavBarAll() {
   const location = useLocation();
@@ -41,18 +41,41 @@ export default function NavBarAll() {
           <div className="collapse navbar-collapse" id="navbarNavAltMarkup">
             <ul className="navbar-nav mr-auto mt-2 mt-lg-0">
               <li className="nav-item active">
-                <a className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}  href="/" aria-current="page">Home</a>
+                <a
+                  className={`nav-link ${
+                    location.pathname === "/" ? "active" : ""
+                  }`}
+                  href="/"
+                  aria-current="page"
+                >
+                  Home
+                </a>
               </li>
               <li className="nav-item">
-                <a className={`nav-link ${location.pathname === '/register' ? 'active' : ''}`} href="/register">Register</a>
+                <a
+                  className={`nav-link ${
+                    location.pathname === "/register" ? "active" : ""
+                  }`}
+                  href="/register"
+                >
+                  Register
+                </a>
               </li>
               <li className="nav-item">
-                <a className={`nav-link ${location.pathname === '/login' ? 'active' : ''}`} href="/login">Login</a>
+                <a
+                  className={`nav-link ${
+                    location.pathname === "/login" ? "active" : ""
+                  }`}
+                  href="/login"
+                >
+                  Login
+                </a>
               </li>
             </ul>
           </div>
         </div>
       </nav>
+      {/* <NavBarIssuer/> */}
     </div>
   );
 }
