@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import "./Register.css";
+import iconAuth from "../assets/iconAuth.PNG";
 
 function Register() {
   const navigate = useNavigate();
@@ -50,60 +52,71 @@ function Register() {
 
   return (
     <div>
-      <form className="formDisplay" onSubmit={handleSubmit}>
-        <h2>Register To Use Soverify solution</h2>
-        <h3>Get a Hold on Your DID to Use Soverify</h3>
-
-        <div className="mb-3">
-          <label htmlFor="exampleInputUserName" className="form-label">
-            Name
-          </label>
-          <input
-            type="text"
-            className="form-control"
-            id="exampleInputUserName"
-            aria-describedby="nameLabel"
-            name="username"
-            value={user.username}
-            onChange={handleChange}
-          />
+      <div className="bg-supporting-purple title-bar">
+        <div className="container-xxl">
+          <h1 className="display-1">Register To Use Soverify Solution</h1>
         </div>
+      </div>
 
-        <div className="mb-3">
-          <label htmlFor="exampleInputUserRole" className="form-label">
-            User Role
-          </label>
-          <select
-            className="form-select"
-            aria-label=".form-select-sm example"
-            name="userRole"
-            value={user.userRole}
-            onChange={handleChange}
-          >
-            <option value={userRoleDefault}>{userRoleDefault}</option>
-            <option value="Issuer">Issuer</option>
-            <option value="Holder">Holder</option>
-          </select>
+      <form onSubmit={handleSubmit}>
+        {/* <h3>Get a Hold on Your DID to Use Soverify</h3> */}
+        <div className="account-div">
+          <img src={iconAuth} alt="iconAuth" width={45} />
+          <h1>Account</h1>
         </div>
+        <div className="formDisplay">
+          <div className="col-sm-6 mb-3">
+            <label htmlFor="exampleInputUserName" className="form-label">
+              Name
+            </label>
+            <input
+              type="text"
+              className="form-control"
+              id="exampleInputUserName"
+              aria-describedby="nameLabel"
+              name="username"
+              value={user.username}
+              onChange={handleChange}
+            />
+          </div>
 
-        <div className="mb-3">
-          <label htmlFor="exampleInputPassword" className="form-label">
-            Password
-          </label>
-          <input
-            type="password"
-            className="form-control"
-            id="exampleInputPassword"
-            aria-describedby="password"
-            name="password"
-            value={user.password}
-            onChange={handleChange}
-          />
+          <div className="col-sm-6 mb-3">
+            <label htmlFor="exampleInputUserRole" className="form-label">
+              User Role
+            </label>
+            <select
+              className="form-select"
+              aria-label=".form-select-sm example"
+              name="userRole"
+              value={user.userRole}
+              onChange={handleChange}
+            >
+              <option value={userRoleDefault}>{userRoleDefault}</option>
+              <option value="Issuer">Issuer</option>
+              <option value="Holder">Holder</option>
+            </select>
+          </div>
+
+          <div className="col-sm-6 mb-3">
+            <label htmlFor="exampleInputPassword" className="form-label">
+              Password
+            </label>
+            <input
+              type="password"
+              className="form-control"
+              id="exampleInputPassword"
+              aria-describedby="password"
+              name="password"
+              value={user.password}
+              onChange={handleChange}
+            />
+          </div>
         </div>
-
-        <button type="submit" className="btn btn-primary">
-          Register Now
-        </button>
+        <div className="btnDisplay">
+          <button type="submit" className="btn btn-primary">
+            Register Now
+          </button>
+        </div>
       </form>
     </div>
   );

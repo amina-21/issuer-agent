@@ -1,0 +1,101 @@
+// sequential or chained API calls
+
+// ###########SCHEMA############
+// CreateSchemaApiCall function
+async function createSchemaApiCall(req, res) {
+  try {
+    const apiUrl = "http://localhost:8021/schemas";
+
+    // Data to send in the request body
+    const postData = {
+      attributes: [
+        "branch_name_teest",
+        "branch_manager_teest",
+        "branch_address_teest",
+        "branch_longitude_teest",
+        "branch_latitude_teest",
+      ],
+      schema_name: "franchise_store_legitimacy_teest",
+      schema_version: "1.0",
+    };
+    // Make the POST API call using axios
+    const response = await axios.post(apiUrl, postData);
+    // Handle the API response
+
+    console.log("API response:", response.data);
+    // Create a new instance of the Data model using the received data
+    const newSchema = new SchemaModel({
+      // Assign the received data to the corresponding properties in the schema
+      // Adjust this based on the properties of the response data
+      schema_id: response.data.schema_id,
+      schema_name: response.data.schema.name,
+      schemaAttributes: response.data.schema.attrNames,
+    });
+
+    // Save the new data to MongoDB
+    newSchema
+      .save()
+      .then(() => {
+        console.log("Schema saved to MongoDB");
+        res.json({ message: "Schema stored successfully" });
+      })
+      .catch((error) => {
+        console.error("Error saving schema to MongoDB:", error);
+        res.status(500).json({ error: "Failed to store schema data" });
+      });
+    return (schema_id = response.data.schema_id);
+  } catch (error) {
+    console.error("Error making POST API call:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+// ###########SCHEMA END############
+
+// ########### CREDENTIAL DEFINITION ############
+// CreateCredentialDefinitionApiCall function
+async function createCredentialDefinitionApiCall(req, res) {
+  try {
+    const apiUrl = "http://localhost:8021/credential-definitions";
+
+    // Data to send in the request body
+    const postData = {
+      revocation_registry_size: 1000,
+      schema_id: createSchemaApiCall(),
+      support_revocation: true,
+      tag: "default",
+    };
+    // Make the POST API call using axios
+    const response = await axios.post(apiUrl, postData);
+    // Handle the API response
+
+    console.log("API response:", response.data);
+    // Create a new instance of the Data model using the received data
+    const newCredentialDefinition = new CredentialDefinitionModel({
+      // Assign the received data to the corresponding properties in the schema
+      // Adjust this based on the properties of the response data
+      credential_definition_id: response.data.credential_definition_id,
+      txn_connection_id: response.data.txn.connection_id,
+      transaction_id: response.data.transaction_id,
+    });
+
+    // Save the new data to MongoDB
+    newCredentialDefinition
+      .save()
+      .then(() => {
+        console.log("CredentialDefinition saved to MongoDB");
+        res.json({ message: "CredentialDefinition stored successfully" });
+      })
+
+      .catch((error) => {
+        console.error("Error saving CredentialDefinition to MongoDB:", error);
+        res
+          .status(500)
+          .json({ error: "Failed to store CredentialDefinition data" });
+      });
+    return (credential_definition_id = response.data.credential_definition_id);
+  } catch (error) {
+    console.error("Error making POST API call:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+// ########### CREDENTIAL DEFINITION END ############

@@ -1,7 +1,7 @@
 import React from "react";
 import logo from "./orange-logo.png";
-import "../boosted/css/boosted.min.css";
-import "../boosted/js/boosted.bundle.min.js";
+// import "../boosted/css/boosted.min.css";
+// import "../boosted/js/boosted.bundle.min.js";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 // import UserContext from "../UserContext";
@@ -20,11 +20,11 @@ function NavBarIssuer() {
 
         // Redirect to the login page
         navigate("/login");
+        window.location.reload()
       })
       .catch((err) => console.log(err));
   }
 
-  
   // const { handleLogout } = useContext(UserContext);
   // const handleLogoutClick = () => {
   //   handleLogout();
@@ -36,7 +36,7 @@ function NavBarIssuer() {
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
         <div className="container-fluid">
           <div className="navbar-brand">
-            <a className="stretched-link" href="/">
+            <a className="stretched-link" href="/issuer-home">
               <img
                 src={logo}
                 width={50}
@@ -74,7 +74,7 @@ function NavBarIssuer() {
                   Home Issuer
                 </a>
               </li>
-              <li className="nav-item">
+              {/* <li className="nav-item">
                 <a
                   className={`nav-link ${
                     location.pathname === "/create-invitation" ? "active" : ""
@@ -83,7 +83,7 @@ function NavBarIssuer() {
                 >
                   Create Invitation
                 </a>
-              </li>
+              </li> */}
               <li className="nav-item">
                 <a
                   className={`nav-link ${
@@ -91,7 +91,17 @@ function NavBarIssuer() {
                   }`}
                   href="/view-invitations"
                 >
-                  View Invitations
+                  Invitations
+                </a>
+              </li>
+              <li className="nav-item">
+                <a
+                  className={`nav-link ${
+                    location.pathname === "/view-stores" ? "active" : ""
+                  }`}
+                  href="/view-stores"
+                >
+                  Stores
                 </a>
               </li>
               <li className="nav-item">
@@ -99,7 +109,6 @@ function NavBarIssuer() {
                   className={`nav-link ${
                     location.pathname === "/logout" ? "active" : ""
                   }`}
-                  
                   onClick={handleLogout}
                 >
                   Logout

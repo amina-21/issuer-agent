@@ -1,8 +1,8 @@
 import React from "react";
 import logo from "./orange-logo.png";
 import "./NavBar.css";
-import "../boosted/css/boosted.min.css";
-import "../boosted/js/boosted.bundle.min.js";
+// import "../boosted/css/boosted.min.css";
+// import "../boosted/js/boosted.bundle.min.js";
 import { useLocation } from "react-router-dom";
 //import NavBarIssuer from "./NavBarIssuer";
 
